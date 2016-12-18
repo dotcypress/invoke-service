@@ -1,6 +1,6 @@
 {
   "name": "invoke-service",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Invoke helper for http(s) services",
   "dependencies": {
     "node-fetch": "^1.6.3"

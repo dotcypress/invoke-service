@@ -28,8 +28,8 @@ function unwrap (res) {
   }
   return res.json()
     .then((json) => {
-      if (!json.ok) {
-        throw new Error(json.error || 'Error calling service')
+      if (('ok' in json && !json.ok) || ('status' in json && json.status !== 'success')) {
+        throw new Error(json.error || json.message || 'Error calling service')
       }
       return json.data
     })
