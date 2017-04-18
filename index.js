@@ -8,15 +8,22 @@ module.exports = function (endpoint, opts) {
   if (options.token) {
     options.headers.authorization = `Bearer ${options.token}`
   }
-  return options.method === 'GET'
-    ? (params = {}) => fetch(`${endpoint}?${queryString(params)}`, options).then(unwrap)
-    : (params = {}) => {
-      const fetchOpts = Object.assign({
-        body: JSON.stringify(params)
-      }, options)
-      fetchOpts.headers['content-type'] = 'application/json'
-      return fetch(endpoint, fetchOpts).then(unwrap)
+  return (params = {}) => {
+    const url = endpoint.replace(/:(\w+)/gi, (match, param) => {
+      var replacement = params[param]
+      if (!replacement) {
+        throw new Error(`Could not find parameter: ${param}`)
+      }
+      delete params[param]
+      return replacement
+    })
+    if (options.method === 'GET') {
+      return fetch(`${url}?${queryString(params)}`, options).then(unwrap)
     }
+    const fetchOpts = Object.assign({body: JSON.stringify(params)}, options)
+    fetchOpts.headers['content-type'] = 'application/json'
+    return fetch(url, fetchOpts).then(unwrap)
+  }
 }
 
 function queryString (obj = {}) {
