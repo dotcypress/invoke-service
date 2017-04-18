@@ -8,7 +8,8 @@ module.exports = function (endpoint, opts) {
   if (options.token) {
     options.headers.authorization = `Bearer ${options.token}`
   }
-  return (params = {}) => {
+  return (payload) => {
+    const params = Object.assign({}, payload)
     const url = endpoint.replace(/:(\w+)\??/gi, (match, param) => {
       if (param in params) {
         const value = params[param]

@@ -1,6 +1,6 @@
 {
   "name": "invoke-service",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Invoke helper for http(s) services",
   "dependencies": {
     "isomorphic-fetch": "^2.2.1"
