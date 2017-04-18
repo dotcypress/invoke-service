@@ -23,6 +23,6 @@ const getWeather = invokeService('https://weather.tld/v2/foo/bar')
 const weather = await getWeather({latitude: 30, longitude: -120})
 
 const fetchBlock = invokeService('https://btc.blockr.io/api/v1/block/raw/:blockHash')
-const block = await getWeather({blockHash: '000000000000000001fb30b30ee88ce945f3ac53886de2d72767d1d721ce1d37'})
+const block = await getWeather({blockHash: '00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048'})
 
 ```

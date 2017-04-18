@@ -9,13 +9,16 @@ module.exports = function (endpoint, opts) {
     options.headers.authorization = `Bearer ${options.token}`
   }
   return (params = {}) => {
-    const url = endpoint.replace(/:(\w+)/gi, (match, param) => {
-      var replacement = params[param]
-      if (!replacement) {
-        throw new Error(`Could not find parameter: ${param}`)
+    const url = endpoint.replace(/:(\w+)\??/gi, (match, param) => {
+      if (param in params) {
+        const value = params[param]
+        delete params[param]
+        return value
       }
-      delete params[param]
-      return replacement
+      if (match.endsWith('?')) {
+        return ''
+      }
+      throw new Error(`Could not find required parameter: ${param}`)
     })
     if (options.method === 'GET') {
       return fetch(`${url}?${queryString(params)}`, options).then(unwrap)
@@ -42,6 +45,6 @@ function unwrap (res) {
     if (('ok' in json && !json.ok) || ('status' in json && json.status !== 'success')) {
       throw new Error(json.error || json.message || 'Error calling service')
     }
-    return json.data
+    return 'data' in json ? json.data : json
   })
 }
