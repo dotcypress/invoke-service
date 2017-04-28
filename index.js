@@ -28,7 +28,7 @@ function invokeService (endpoint, opts) {
   }
   return (payload, token) => {
     if (breakCircuit) {
-      throw new Error('Service is down.')
+      return Promise.reject(new Error('Service is down.'))
     }
     const params = Object.assign({}, payload)
     const url = endpoint.replace(/:([a-zA-Z]\w*)\??/gi, (match, param) => {
