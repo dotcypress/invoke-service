@@ -1,16 +1,37 @@
 const fetch = require('isomorphic-fetch')
 
-module.exports = function (endpoint, opts) {
+function invokeService (endpoint, opts) {
   const options = Object.assign({
     method: 'GET',
     headers: {}
   }, opts)
+  let breakCircuit = false
   if (options.token) {
-    options.headers.authorization = `Bearer ${options.token}`
+    options.headers['authorization'] = `Bearer ${options.token}`
   }
-  return (payload) => {
+  if (options.heartbeat) {
+    if (typeof options.heartbeat === 'string') {
+      options.heartbeat = {
+        url: options.heartbeat,
+        interval: 5000,
+        options: {
+          timeout: 1000
+        }
+      }
+    }
+    const checkConnection = invokeService(options.heartbeat.url, options.heartbeat.options)
+    setInterval(() => {
+      checkConnection()
+        .then(() => { breakCircuit = false })
+        .catch(() => { breakCircuit = true })
+    }, options.heartbeat.interval)
+  }
+  return (payload, token) => {
+    if (breakCircuit) {
+      throw new Error('Service is down.')
+    }
     const params = Object.assign({}, payload)
-    const url = endpoint.replace(/:(\w+)\??/gi, (match, param) => {
+    const url = endpoint.replace(/:([a-zA-Z]\w*)\??/gi, (match, param) => {
       if (param in params) {
         const value = params[param]
         delete params[param]
@@ -21,12 +42,15 @@ module.exports = function (endpoint, opts) {
       }
       throw new Error(`Could not find required parameter: ${param}`)
     })
-    if (options.method === 'GET') {
-      return fetch(`${url}?${queryString(params)}`, options).then(unwrap)
+    const callOptions = Object.assign({}, options)
+    if (token) {
+      callOptions.headers['authorization'] = `Bearer ${token}`
     }
-    const fetchOpts = Object.assign({body: JSON.stringify(params)}, options)
-    fetchOpts.headers['content-type'] = 'application/json'
-    return fetch(url, fetchOpts).then(unwrap)
+    if (options.method === 'GET') {
+      return fetch(`${url}?${queryString(params)}`, callOptions).then(unwrap)
+    }
+    callOptions.headers['content-type'] = 'application/json'
+    return fetch(url, callOptions).then(unwrap)
   }
 }
 
@@ -49,3 +73,5 @@ function unwrap (res) {
     return 'data' in json ? json.data : json
   })
 }
+
+module.exports = invokeService
