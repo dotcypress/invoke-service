@@ -25,8 +25,8 @@ const weather = await getWeather({latitude: 30, longitude: -120})
 const fetchBlock = invokeService('https://btc.blockr.io/api/v1/block/raw/:blockHash')
 const block = await fetchBlock({blockHash: '00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048'})
 
-const fetchTx = invokeService('https://domail.tld/api/tx/:txHash', {
-  heartbeat: 'https://domail.tld/api/ping'
+const fetchTx = invokeService('https://domain.tld/api/tx/:txHash', {
+  heartbeat: 'https://domain.tld/api/ping'
 })
 const tx = await fetchTx({txHash: '88018bb271d5af74feff1b0f4946f93c582e87a8aeffcdb4e9dbd0e4a67d3a4b'})
 
