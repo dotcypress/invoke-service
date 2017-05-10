@@ -50,6 +50,7 @@ function invokeService (endpoint, opts) {
       return fetch(`${url}?${queryString(params)}`, callOptions).then(unwrap)
     }
     callOptions.headers['content-type'] = 'application/json'
+    callOptions.body = JSON.stringify(params)
     return fetch(url, callOptions).then(unwrap)
   }
 }
