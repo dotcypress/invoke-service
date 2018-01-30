@@ -17,17 +17,23 @@ $ npm install invoke-service --save
 ## Examples
 
 ```js
-const invokeService = require('invoke-service')
+const { service, invoke } = require('invoke-service')
 
-const getWeather = invokeService('https://weather.tld/v2/foo/bar')
-const weather = await getWeather({latitude: 30, longitude: -120})
+const weather1 = await invoke('https://weather.tld/v2/foo/bar', {latitude: 30, longitude: -130})
 
-const fetchBlock = invokeService('https://btc.blockr.io/api/v1/block/raw/:blockHash')
+const getWeather = service('https://weather.tld/v2/foo/bar')
+const weather2 = await getWeather({latitude: 30, longitude: -120})
+
+
+const fetchBlock = service('https://blockexplorer.com/api/block/:blockHash')
 const block = await fetchBlock({blockHash: '00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048'})
 
-const fetchTx = invokeService('https://domain.tld/api/tx/:txHash', {
+const authToken = '~34tmnku7bufyvfsvdytfycvasknclsdg'
+const fetchTx = service('https://domain.tld/api/tx/:txHash', {
+  token: authToken,
   heartbeat: 'https://domain.tld/api/ping'
 })
+
 const tx = await fetchTx({txHash: '88018bb271d5af74feff1b0f4946f93c582e87a8aeffcdb4e9dbd0e4a67d3a4b'})
 
 ```

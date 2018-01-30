@@ -1,58 +1,61 @@
 const fetch = require('isomorphic-fetch')
 
-function invokeService (endpoint, opts) {
+const DefaultTimeout = 3000
+
+function service (endpoint, opts) {
   const options = Object.assign({
     method: 'GET',
     headers: {}
   }, opts)
   let breakCircuit = false
   if (options.token) {
-    options.headers['authorization'] = `Bearer ${options.token}`
+    options.headers['Authorization'] = `Bearer ${options.token}`
   }
   if (options.heartbeat) {
     if (typeof options.heartbeat === 'string') {
       options.heartbeat = {
         url: options.heartbeat,
-        interval: 5000,
+        interval: 10000,
         options: {
-          timeout: 1000
+          timeout: DefaultTimeout
         }
       }
     }
-    const checkConnection = invokeService(options.heartbeat.url, options.heartbeat.options)
+    const checkConnection = invoke(options.heartbeat.url, options.heartbeat.payload, options.heartbeat.options)
     setInterval(() => {
       checkConnection()
         .then(() => { breakCircuit = false })
         .catch(() => { breakCircuit = true })
     }, options.heartbeat.interval)
   }
-  return (payload, token) => {
-    if (breakCircuit) {
-      return Promise.reject(new Error('Service is down.'))
+  return (payload, token) => breakCircuit
+    ? Promise.reject(new Error('Can\'t connect to service'))
+    : invoke(endpoint, payload, Object.assign({ token }, options))
+}
+
+function invoke (endpoint, payload, options) {
+  const params = Object.assign({}, payload)
+  const url = endpoint.replace(/:([a-zA-Z]\w*)\??/gi, (match, param) => {
+    if (param in params) {
+      const value = params[param]
+      delete params[param]
+      return value
     }
-    const params = Object.assign({}, payload)
-    const url = endpoint.replace(/:([a-zA-Z]\w*)\??/gi, (match, param) => {
-      if (param in params) {
-        const value = params[param]
-        delete params[param]
-        return value
-      }
-      if (match.endsWith('?')) {
-        return ''
-      }
-      throw new Error(`Could not find required parameter: ${param}`)
-    })
-    const callOptions = Object.assign({}, options)
-    if (token) {
-      callOptions.headers['authorization'] = `Bearer ${token}`
+    if (match.endsWith('?')) {
+      return ''
     }
-    if (options.method === 'GET') {
-      return fetch(`${url}?${queryString(params)}`, callOptions).then(unwrap)
-    }
-    callOptions.headers['content-type'] = 'application/json'
-    callOptions.body = JSON.stringify(params)
-    return fetch(url, callOptions).then(unwrap)
+    throw new Error(`Could not find required parameter: ${param}`)
+  })
+  const callOptions = Object.assign({}, options)
+  if (callOptions.token) {
+    callOptions.headers['Authorization'] = `Bearer ${callOptions.token}`
   }
+  if (options.method === 'GET') {
+    return fetch(`${url}?${queryString(params)}`, callOptions).then(unwrap)
+  }
+  callOptions.headers['Content-Type'] = 'application/json'
+  callOptions.body = JSON.stringify(params)
+  return fetch(url, callOptions).then(unwrap)
 }
 
 function queryString (obj = {}) {
@@ -75,4 +78,7 @@ function unwrap (res) {
   })
 }
 
-module.exports = invokeService
+module.exports = {
+  invoke,
+  service
+}
