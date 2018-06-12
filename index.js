@@ -71,7 +71,11 @@ function unwrap (res) {
     throw err
   }
   return res.json().then((json) => {
-    if (('ok' in json && !json.ok) || ('status' in json && (json.status !== 'success' && json.status !== 'ok'))) {
+    if (
+      ('ok' in json && !json.ok) ||
+      ('success' in json && !json.success) ||
+      ('status' in json && (json.status !== 'success' && json.status !== 'ok'))
+    ) {
       throw new Error(json.error || json.message || 'Error calling service')
     }
     return 'data' in json ? json.data : json
