@@ -1,16 +1,15 @@
 {
   "name": "invoke-service",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Invoke helper for http(s) services",
   "dependencies": {
     "isomorphic-fetch": "^2.2.1"
   },
   "devDependencies": {
-    "ava": "^0.25.0",
-    "eslint": "^5.4.0",
-    "eslint-config-standard": "^12.0.0",
+    "eslint": "^6.3.0",
+    "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-node": "^7.0.1",
+    "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.0.0",
     "eslint-plugin-standard": "^4.0.0"
   },
@@ -19,7 +18,7 @@
     "node": ">=6.2.0"
   },
   "scripts": {
-    "test": "eslint . && ava test"
+    "test": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -28,7 +27,7 @@
   "keywords": [
     "microservices"
   ],
-  "author": "Vitaly Domnikov <dotcypress@gmail.com>",
+  "author": "Vitaly Domnikov <oss@vitaly.codes>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dotcypress/invoke-service/issues"

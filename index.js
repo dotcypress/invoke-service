@@ -4,6 +4,8 @@ const DefaultHeartbeatTimeout = 3000
 const DefaultHeartbeatInterval = 10000
 
 const DefaultCallOptions = {
+  method: 'GET',
+  headers: {},
   extractError: (json) => {
     if (
       ('ok' in json && !json.ok) ||
@@ -24,37 +26,39 @@ const DefaultCallOptions = {
 }
 
 function service (endpoint, opts) {
-  const options = Object.assign({
-    method: 'GET',
-    headers: {}
-  }, opts)
-  let breakCircuit = false
-  if (options.token) {
-    options.headers['Authorization'] = `Bearer ${options.token}`
+  const callOptions = Object.assign({}, DefaultCallOptions, opts)
+  if (callOptions.token) {
+    callOptions.headers.authorization = `Bearer ${callOptions.token}`
   }
-  if (options.heartbeat) {
-    if (typeof options.heartbeat === 'string') {
-      options.heartbeat = {
-        url: options.heartbeat,
+  let breakCircuit = false
+  if (callOptions.token) {
+    callOptions.headers.authorization = `Bearer ${callOptions.token}`
+  }
+  if (callOptions.heartbeat) {
+    if (typeof callOptions.heartbeat === 'string') {
+      callOptions.heartbeat = {
+        url: callOptions.heartbeat,
         interval: DefaultHeartbeatInterval,
         options: {
           timeout: DefaultHeartbeatTimeout
         }
       }
     }
-    const checkConnection = invoke(options.heartbeat.url, options.heartbeat.payload, options.heartbeat.options)
+
+    const { url, payload, interval, options } = callOptions.heartbeat
+    const checkConnection = invoke(url, payload, options)
     setInterval(() => {
       checkConnection()
         .then(() => { breakCircuit = false })
         .catch(() => { breakCircuit = true })
-    }, options.heartbeat.interval)
+    }, interval)
   }
   return (payload, token) => breakCircuit
     ? Promise.reject(new Error('Service unavailable'))
-    : invoke(endpoint, payload, Object.assign({ token }, options))
+    : invoke(endpoint, payload, Object.assign({ token }, callOptions))
 }
 
-function invoke (endpoint, payload, options) {
+function invoke (endpoint, payload, opts) {
   const params = Object.assign({}, payload)
   const url = endpoint.replace(/:([a-zA-Z]\w*)\??/gi, (match, param) => {
     if (param in params) {
@@ -67,11 +71,11 @@ function invoke (endpoint, payload, options) {
     }
     throw new Error(`Could not find required parameter: ${param}`)
   })
-  const callOptions = Object.assign({}, DefaultCallOptions, options)
+  const callOptions = Object.assign({}, DefaultCallOptions, opts)
   if (callOptions.token) {
-    callOptions.headers['Authorization'] = `Bearer ${callOptions.token}`
+    callOptions.headers.authorization = `Bearer ${callOptions.token}`
   }
-  if (options.method === 'GET') {
+  if (callOptions.method === 'GET') {
     return fetch(`${url}?${queryString(params)}`, callOptions).then((res) => extract(res, callOptions))
   }
   callOptions.headers['Content-Type'] = 'application/json'
